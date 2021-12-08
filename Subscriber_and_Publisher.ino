@@ -181,9 +181,6 @@ void publish_rfid(){
     char tag_array[str_len];
     tag.toCharArray(tag_array, str_len); 
     
-    client.publish("IoTlab/temperature", tempArr);
-    client.publish("IoTlab/humidity", humArr);
-    client.publish("IoTlab/photoResistor", resistArr);
     client.publish("IoTlab/RFID", tag_array);                                                                             
     tag = "";
     rfid.PICC_HaltA();
