@@ -14,7 +14,7 @@ const char * password = "Boutinerie";
 //const char * ssid = "Please_Let_Me_See_My_Kids";
 //const char * password = "sussybaka";
 
-const char * mqtt_server = "10.0.0.47";
+const char * mqtt_server = "10.0.0.46";
 
 //const char * mqtt_server = "192.168.1.104";
 
@@ -82,19 +82,9 @@ void callback(String topic, byte * message, unsigned int length) {
             digitalWrite(fan_pinC, HIGH);
         } else {
             Serial.println(" Fan is OFF");
-            digitalWrite(fan_pinA, HIGH);
+            digitalWrite(fan_pinA, LOW);
             digitalWrite(fan_pinB, LOW);
             digitalWrite(fan_pinC, LOW);
-        }
-    }
-
-    if (topic == "room/resistorlights") {
-        if (messagein == "true") {
-            Serial.println(" Light is ON");
-            digitalWrite(light_pin, HIGH);
-        } else {
-            Serial.println(" Light is OFF");
-            digitalWrite(light_pin, LOW);
         }
     }
 
@@ -194,9 +184,42 @@ void loop() {
     }
     if (!client.loop())
         client.connect("vanieriot");
-        
-    general_publish();
-    publish_rfid();
+
+    if(!rfid.PICC_IsNewCardPresent()){
+      float temp = dht.getTemperature();
+      float hum = dht.getHumidity();
+      float photoResistor = analogRead(photoResist);
     
-    delay(2000);
+      char tempArr[8];
+      dtostrf(temp, 6, 2, tempArr);
+      char humArr[8];
+      dtostrf(hum, 6, 2, humArr);
+      char resistArr[8];
+       dtostrf(photoResistor, 6, 2, resistArr);
+
+       client.publish("IoTlab/temperature", tempArr);
+       client.publish("IoTlab/humidity", humArr);
+       client.publish("IoTlab/photoResistor", resistArr);
+
+       delay(2000);
+    }
+    else if (!rfid.PICC_ReadCardSerial()) {return;}
+    else{
+      for (byte i = 0; i < 4; i++) {
+        tag += rfid.uid.uidByte[i];
+      }
+    //Serial.println(tag);
+
+      int str_len = tag.length()+1;
+      char tag_array[str_len];
+      tag.toCharArray(tag_array, str_len); 
+      client.publish("IoTlab/RFID", tag_array);                                                                             
+     tag = "";
+     rfid.PICC_HaltA();
+      rfid.PCD_StopCrypto1();
+    }
+        
+    //general_publish();
+    //publish_rfid();
+    
 }
