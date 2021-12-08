@@ -31,12 +31,12 @@ def publish(client):
         devices = bluetooth.discover_devices(lookup_names=True)
     
         result = ''
-        for x in devices:
-            device = BluetoothRSSI(x[0])
-            rssi_q = device.request_rssi()
-            rssi1 = functools.reduce(lambda sub, ele: sub * 10 + ele, rssi_q)
-            result += str(x)
-            result += ' => RSSI: ' + str(rssi1)
+        for device in devices:
+            device_mac = BluetoothRSSI(device[0])
+            rssi_tuple = device_mac.request_rssi()
+            rssi = functools.reduce(lambda sub, ele: sub * 10 + ele, rssi_tuple)
+            result += str(device)
+            result += ' => RSSI: ' + str(rssi)
         client.publish(topic, result)
         time.sleep(5)
 
