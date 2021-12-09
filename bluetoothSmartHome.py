@@ -35,8 +35,8 @@ def publish(client):
             device_mac = BluetoothRSSI(device[0])
             rssi_tuple = device_mac.request_rssi()
             rssi = functools.reduce(lambda sub, ele: sub * 10 + ele, rssi_tuple)
-            result += str(device)
-            result += ' => RSSI: ' + str(rssi)
+            result += "Device: "+str(device)
+            result += " RSSI: '" + str(rssi) + "' "
         client.publish(topic, result)
         time.sleep(5)
 

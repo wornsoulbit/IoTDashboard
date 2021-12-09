@@ -8,13 +8,23 @@ DHTesp dht;
 //const char * ssid = "*********";
 //const char * password = "*********";
 
+//const char * ssid = "*********";
+//const char * password = "*********";
+
 const char * ssid = "*********";
 const char * password = "*********";
 
 //const char * ssid = "*********";
 //const char * password = "*********";
 
+//const char * ssid = "*********";
+//const char * password = "*********";
+
+//const char * mqtt_server = "*********";
+
 const char * mqtt_server = "*********";
+
+//const char * mqtt_server = "*********";
 
 //const char * mqtt_server = "*********";
 
@@ -25,11 +35,13 @@ constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
 
 // FIX THESE PINS, THEY ARE WRONG, CHANGED TO ALLOW FOR RFID READER
 int buzzer = 16;
-int light_pin = 5;
+int light_pin = 15;
+int resistlight_pin = 5 ;
 int fan_pinA = 1;
 int fan_pinB = 10;
 int fan_pinC = 9;
-int photoResist = 15;
+int photoResist = A0;
+int relay_pin = 3;
 
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 MFRC522::MIFARE_Key key;
@@ -64,13 +76,25 @@ void callback(String topic, byte * message, unsigned int length) {
         messagein += (char) message[i];
     }
 
+    if (topic == "room/resistlights") {
+        if (messagein == "true") {
+            Serial.println(" Light is ON");
+            digitalWrite(resistlight_pin, HIGH);
+        } else {
+            Serial.println(" Light is OFF");
+            digitalWrite(resistlight_pin, LOW);
+        }
+    }
+
     if (topic == "room/light") {
         if (messagein == "true") {
             Serial.println(" Light is ON");
             digitalWrite(light_pin, HIGH);
+            digitalWrite(relay_pin, LOW);
         } else {
             Serial.println(" Light is OFF");
             digitalWrite(light_pin, LOW);
+            digitalWrite(relay_pin, HIGH);
         }
     }
 
@@ -112,6 +136,7 @@ void reconnect() {
 
             Serial.println("connected");
             client.subscribe("room/light");
+            client.subscribe("room/resistlights");
             client.subscribe("room/fan");
             client.subscribe("room/photoresistor");
             client.subscribe("IoTlab/IntruderBuzzer");
@@ -134,48 +159,15 @@ void setup() {
     client.setCallback(callback);
     dht.setup(4, DHTesp::DHT11);
     pinMode(light_pin, OUTPUT);
+    pinMode(resistlight_pin, OUTPUT);
     pinMode(fan_pinA, OUTPUT);
     pinMode(fan_pinB, OUTPUT);
     pinMode(fan_pinC, OUTPUT);
     pinMode(photoResist, INPUT);
     pinMode(buzzer, OUTPUT);
+    pinMode(relay_pin, OUTPUT);
     SPI.begin(); // Init SPI bus
     rfid.PCD_Init(); // Init MFRC522
-}
-
-void general_publish(){ // DEPRECATED
-  float temp = dht.getTemperature();
-   float hum = dht.getHumidity();
-   float photoResistor = analogRead(photoResist);
-    
-   char tempArr[8];
-   dtostrf(temp, 6, 2, tempArr);
-   char humArr[8];
-   dtostrf(hum, 6, 2, humArr);
-   char resistArr[8];
-   dtostrf(photoResistor, 6, 2, resistArr);
-
-   client.publish("IoTlab/temperature", tempArr);
-   client.publish("IoTlab/humidity", humArr);
-   client.publish("IoTlab/photoResistor", resistArr);
-}
-
-void publish_rfid(){ // DEPRECATED
-  if (rfid.PICC_ReadCardSerial()) {
-    for (byte i = 0; i < 4; i++) {
-      tag += rfid.uid.uidByte[i];
-    }
-    //Serial.println(tag);
-
-    int str_len = tag.length()+1;
-    char tag_array[str_len];
-    tag.toCharArray(tag_array, str_len); 
-    
-    client.publish("IoTlab/RFID", tag_array);                                                                             
-    tag = "";
-    rfid.PICC_HaltA();
-    rfid.PCD_StopCrypto1();
-  }
 }
 
 void loop() {
@@ -188,7 +180,8 @@ void loop() {
     if(!rfid.PICC_IsNewCardPresent()){
       float temp = dht.getTemperature();
       float hum = dht.getHumidity();
-      float photoResistor = analogRead(photoResist);
+      int photoResistor = analogRead(photoResist);
+      Serial.println(photoResistor);
     
       char tempArr[8];
       dtostrf(temp, 6, 2, tempArr);
@@ -199,7 +192,7 @@ void loop() {
 
        client.publish("IoTlab/temperature", tempArr);
        client.publish("IoTlab/humidity", humArr);
-       client.publish("IoTlab/photoResistor", resistArr);
+       client.publish("room/photoresistor", resistArr);
 
        delay(2000);
     }
@@ -218,8 +211,5 @@ void loop() {
      rfid.PICC_HaltA();
       rfid.PCD_StopCrypto1();
     }
-        
-    //general_publish();
-    //publish_rfid();
     
 }
