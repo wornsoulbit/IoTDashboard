@@ -5,18 +5,18 @@
 #include "DHTesp.h"
 
 DHTesp dht;
-//const char * ssid = "TP-Link_8856";
-//const char * password = "87973365";
+//const char * ssid = "*********";
+//const char * password = "*********";
 
-const char * ssid = "Helix_2010";
-const char * password = "Boutinerie";
+const char * ssid = "*********";
+const char * password = "*********";
 
-//const char * ssid = "Please_Let_Me_See_My_Kids";
-//const char * password = "sussybaka";
+//const char * ssid = "*********";
+//const char * password = "*********";
 
-const char * mqtt_server = "10.0.0.46";
+const char * mqtt_server = "*********";
 
-//const char * mqtt_server = "192.168.1.104";
+//const char * mqtt_server = "*********";
 
 #define D3 0
 #define D4 2
@@ -143,7 +143,7 @@ void setup() {
     rfid.PCD_Init(); // Init MFRC522
 }
 
-void general_publish(){
+void general_publish(){ // DEPRECATED
   float temp = dht.getTemperature();
    float hum = dht.getHumidity();
    float photoResistor = analogRead(photoResist);
@@ -160,7 +160,7 @@ void general_publish(){
    client.publish("IoTlab/photoResistor", resistArr);
 }
 
-void publish_rfid(){
+void publish_rfid(){ // DEPRECATED
   if (rfid.PICC_ReadCardSerial()) {
     for (byte i = 0; i < 4; i++) {
       tag += rfid.uid.uidByte[i];
